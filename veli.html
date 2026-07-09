@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Can Yavuz — Veli Raporu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>:root {
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --primary: #4f46e5;
+  --primary-dark: #312e81;
+}
+body { background: var(--bg); font-family: 'Segoe UI', system-ui, sans-serif; color: #1e293b; }
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+.stat-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.section-title {
+  font-size: 1.125rem; font-weight: 700; color: #1e293b;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.section-title i { color: var(--primary); }
+.exam-pill { background: #eef2ff; color: #4338ca; font-size: 0.7rem; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+.stress-tag { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border: 1px solid #fcd34d; }
+.detail-card { border-left: 4px solid; padding: 1rem 1.25rem; border-radius: 0 12px 12px 0; background: #fafafa; }
+.detail-card.wrong { border-color: #ef4444; }
+.detail-card.strength { border-color: #22c55e; }
+.chart-block { display: flex; flex-direction: column; gap: 1rem; }
+.chart-wrap {
+  position: relative;
+  height: 260px;
+  min-height: 200px;
+  max-height: 280px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.chart-wrap.tall { height: 280px; max-height: 300px; }
+.chart-wrap canvas { display: block; max-height: 100% !important; }
+.legend-below { margin-top: 0.25rem; clear: both; }
+#errorLegend { display: none; }
+.print-chart-img { display: none; width: 100%; max-height: 200px; object-fit: contain; margin: 0 auto 8px; }
+.data-table-print { display: none; width: 100%; margin-top: 0.5rem; border-collapse: collapse; font-size: 0.75rem; }
+.data-table-print th, .data-table-print td { border: 1px solid #e2e8f0; padding: 4px 8px; }
+.data-table-print thead { background: #f1f5f9; }
+.progress-bar { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+.q-row:hover { background: #f8fafc; }
+.q-page-link { cursor: pointer; transition: background 0.15s ease, box-shadow 0.15s ease; }
+.q-page-link:hover { background: #eef2ff !important; box-shadow: inset 0 0 0 1px #c7d2fe; }
+.q-page-link:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.stress-tag.q-page-link:hover { filter: brightness(1.03); }
+.q-ref-link {
+  color: #4338ca; font-weight: 600; text-decoration: underline;
+  text-decoration-style: dotted; cursor: pointer;
+}
+.q-ref-link:hover { color: #312e81; text-decoration-style: solid; }
+body.modal-open { overflow: hidden; touch-action: none; }
+.question-modal {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0.5rem;
+}
+.question-modal.hidden { display: none !important; }
+.question-modal-backdrop {
+  position: absolute; inset: 0; background: rgba(15, 23, 42, 0.85);
+}
+.question-modal-panel {
+  position: relative; z-index: 1; width: min(960px, 100%);
+  height: min(90vh, 900px); max-height: calc(100vh - 1rem);
+  background: #0f172a;
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.45);
+  display: flex; flex-direction: column;
+}
+.question-modal-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid #334155;
+  background: #1e293b; flex-shrink: 0; flex-wrap: wrap;
+}
+.question-modal-caption {
+  font-size: 0.8125rem; font-weight: 600; color: #f1f5f9; margin: 0;
+  flex: 1 1 120px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.question-modal-controls {
+  display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0;
+}
+.qp-btn {
+  width: 40px; height: 40px; border-radius: 10px; border: none;
+  background: #334155; color: #f8fafc; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.875rem; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.qp-btn:hover { background: #475569; }
+.qp-btn:active { background: #64748b; transform: scale(0.96); }
+.qp-divider {
+  width: 1px; height: 24px; background: #475569; margin: 0 0.15rem;
+}
+.question-zoom-level {
+  min-width: 3rem; text-align: center; font-size: 0.75rem; font-weight: 700;
+  color: #cbd5e1; font-variant-numeric: tabular-nums;
+}
+.question-modal-close {
+  width: 40px; height: 40px; border-radius: 10px; border: none;
+  background: #475569; color: #f8fafc; cursor: pointer; flex-shrink: 0;
+  touch-action: manipulation;
+}
+.question-modal-close:hover { background: #64748b; }
+.question-modal-body {
+  flex: 1; min-height: 0; overflow: hidden; position: relative;
+  background: #0f172a; touch-action: none; cursor: grab;
+  display: flex; align-items: center; justify-content: center;
+}
+.question-modal-body.is-dragging { cursor: grabbing; }
+.question-viewport-inner {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; will-change: transform;
+}
+.question-modal-body img {
+  max-width: none; max-height: none; width: auto; height: auto;
+  border-radius: 4px; background: #fff;
+  transform-origin: center center;
+  transition: none;
+  user-select: none; -webkit-user-drag: none;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.4);
+}
+.question-modal-hint {
+  margin: 0; padding: 0.4rem 0.75rem; font-size: 0.6875rem;
+  color: #94a3b8; text-align: center; background: #1e293b;
+  border-top: 1px solid #334155; flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .question-modal { padding: 0; }
+  .question-modal-panel {
+    width: 100%; height: 100%; max-height: 100vh;
+    border-radius: 0;
+  }
+  .question-modal-hint { font-size: 0.625rem; padding: 0.35rem 0.5rem; }
+  .question-modal-caption { font-size: 0.75rem; }
+}
+@media print {
+  .question-modal, .q-page-link { pointer-events: none; }
+}
+.print-only { display: none; }
+@media screen { .print-chart-img { display: none !important; } }
+#examSummaryTables { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+#examSummaryTables > div { margin-bottom: 0 !important; }
+@media (max-width: 640px) { #examSummaryTables { grid-template-columns: 1fr; } }
+.badge-correct { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+.badge-wrong { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+.metric-ring { font-size: 2rem; font-weight: 800; line-height: 1; }
+.veli-section { background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 50%, #f0f9ff 100%); border-color: #99f6e4 !important; }
+.veli-section .section-title i { color: #0d9488; }
+.veli-card { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; border: 1px solid #ccfbf1; }
+.veli-highlight { background: #fff; border-left: 4px solid #14b8a6; border-radius: 0 12px 12px 0; padding: 1rem 1.25rem; }
+.veli-do li::marker { color: #059669; }
+.veli-dont li::marker { color: #dc2626; }
+.ogrenci-section { background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #fdf4ff 100%); border-color: #c4b5fd !important; }
+.ogrenci-card { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; border: 1px solid #e9d5ff; }
+.ogrenci-highlight { background: #fff; border-left: 4px solid #8b5cf6; border-radius: 0 12px 12px 0; padding: 1rem 1.25rem; }
+.hub-link-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.hub-link-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.12); }
+.site-nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid #e2e8f0; }
+@media print {
+  @page { margin: 10mm 12mm; size: A4; }
+  body { background: #fff; font-size: 9pt; line-height: 1.35; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .print-hide-canvas { display: none !important; }
+  .print-charts-row { display: block !important; }
+  .print-charts-row > .card { margin-bottom: 8px !important; width: 100% !important; }
+  header {
+    background: linear-gradient(135deg, #312e81, #4f46e5) !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    padding: 10px 16px !important;
+  }
+  .site-nav { display: none !important; }
+  .card { box-shadow: none !important; border: 1px solid #d1d5db; padding: 10px 12px !important; margin-bottom: 6px !important; }
+  .chart-wrap canvas { display: none !important; }
+  .print-chart-img { display: block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .data-table-print { display: table !important; }
+  .legend-below { display: none !important; }
+  #wrongDetailCards { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+  table { font-size: 8pt; width: 100%; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+}
+</style>
+</head>
+<body class="min-h-screen">
+  <nav class="site-nav no-print sticky top-0 z-50 py-3 px-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm"><i class="fas fa-arrow-left mr-1"></i> Ana sayfa</a>
+      <button type="button" onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-print mr-1"></i> Yazdır</button>
+    </div>
+  </nav>
+  <header class="bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-800 text-white py-8 px-6 shadow-lg">
+    <div class="max-w-6xl mx-auto">
+      <p class="text-white/70 text-sm uppercase tracking-widest mb-2 font-medium"><i class="fas fa-graduation-cap mr-2"></i>Pedagojik · Psikolojik · Akademik Analiz</p>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Can Yavuz</h1>
+      <p class="text-xl text-white/90 mt-2">TYT — Matematik · Deneme Sınavı - 01</p>
+      <div class="flex flex-wrap gap-4 mt-4 text-sm text-white/80">
+        <span><i class="far fa-calendar mr-1"></i>9 Temmuz 2026</span>
+        <span><i class="fas fa-camera mr-1"></i>7 sayfa fotoğraf</span>
+        <span><i class="fas fa-list-ol mr-1"></i>40 soru analizi</span>
+        <span><i class="fas fa-book mr-1"></i>Deneme Sınavı - 01 (B Kitapçığı · Temel Matematik)</span>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <section class="card veli-section p-6 border-2">
+      <h2 class="section-title text-teal-900 mb-4"><i class="fas fa-house-user"></i>Veliye Özel Durum Özeti</h2>
+      <p class="text-sm text-teal-700/90 mb-5 italic">Bu bölüm veliler için sade dilde hazırlanmıştır.</p>
+      <div class="veli-highlight mb-6 text-sm text-gray-700 leading-relaxed"><p class="mb-3">Can Yavuz, TYT Deneme Sınavı-01 Temel Matematik bölümünde 40 sorunun 34'ünü doğru yanıtladı (%85). Üniversite sınavına hazırlıkta güçlü bir tablo. Özellikle denklem kurma, çok adımlı problemler ve geometrinin büyük kısmında düzenli çözüm görüyoruz.</p>
+        <p>Kayıp puanlar EBOB-EKOK ve basamaklı sayı sorusu, iki boş bırakılan soru (olasılık ve grafik) ve bir problemde hesap ile şıkkın uyuşmamasından geliyor. Panik değil; bilgi ve son kontrol eksikliği ön planda.</p></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="veli-card text-center">
+          <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Genel başarı</p>
+          <p class="text-2xl font-bold text-gray-900">34 doğru / 6 yanlış-boş</p>
+          <p class="text-sm text-gray-600 mt-1">%85 genel başarı</p>
+        </div>
+        <div class="veli-card text-center">
+          <p class="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">En iyi deneme</p>
+          <p class="text-lg font-bold text-green-700">Deneme Sınavı - 01</p>
+          <p class="text-sm text-gray-600 mt-1">Problem ve cebir bloğu çok güçlü</p>
+        </div>
+        <div class="veli-card">
+          <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-2">Dikkat gereken konular</p>
+          <ul class="text-sm text-gray-700 space-y-1 text-left">            <li>• EBOB ve EKOK</li>
+            <li>• Olasılık</li>
+            <li>• Grafik yorumu</li>
+            <li>• Geometri açı</li></ul>
+        </div>
+        <div class="veli-card">
+          <p class="text-xs font-semibold text-rose-600 uppercase tracking-wide mb-1">Sınavdaki duygusal tablo</p>
+          <p class="text-lg font-bold text-amber-700">Düşük-Orta</p>
+          <p class="text-sm text-gray-600 mt-1">Genel sakin; birkaç soruda yoğun karalama ve 2 boş bırakma</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+        <div class="veli-card">
+          <h3 class="font-bold text-green-800 mb-3 flex items-center gap-2"><i class="fas fa-star text-amber-500"></i> Çocuğunuzun güçlü yanları</h3>
+          <ul class="text-sm text-gray-700 space-y-2 list-disc pl-5">            <li>Soruları çözerken adım adım işlem yazıyor</li>
+            <li>Uzun problemlerde denklem kurmayı deniyor</li>
+            <li>Geometride şekil çizerek ilerliyor</li>
+            <li>«Yalnız I / Yalnız II» tipi mantık sorularında dikkatli</li>
+            <li>Denemenin orta ve son bölümünde tempo korunmuş</li></ul>
+        </div>
+        <div class="veli-card">
+          <h3 class="font-bold text-amber-800 mb-3 flex items-center gap-2"><i class="fas fa-seedling text-teal-600"></i> Gelişmesi gereken konular</h3>
+          <ul class="text-sm text-gray-700 space-y-2 list-disc pl-5">            <li>EBOB-EKOK minimum-maksimum soruları</li>
+            <li>Olasılık ve sayma</li>
+            <li>Hareket grafiklerini okuma</li>
+            <li>Son kontrol: hesap ile şıkkı karşılaştırma</li>
+            <li>Boş bırakmak yerine mantıklı tahmin stratejisi</li></ul>
+        </div>
+      </div>
+      <div class="veli-highlight mb-6 text-sm text-gray-700">
+        <h3 class="font-bold text-gray-800 mb-2"><i class="fas fa-eye text-teal-600 mr-1"></i> Kağıttan gördüklerimiz (duygusal ipuçları)</h3>
+        <p class="mb-2">10. soruda faktör ağacı karışık — konuyu biliyor gibi ama sonuca güvenememiş.</p>
+        <p>28. sorunun numarasını daire içine almış; çözmüş ama zorlandığını hissettirmiş.</p>
+        <p>33. soruda B şıkkını işaretlemiş — açı ilişkisi tam oturmamış.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+        <div class="veli-card">
+          <h3 class="font-bold text-teal-800 mb-3"><i class="fas fa-hand-holding-heart mr-1"></i> Evde sizin yapabilecekleriniz</h3>
+          <ol class="text-sm text-gray-700 space-y-3 list-decimal pl-5">            <li><strong>Haftada 2 kez, 15'er dakika</strong> EBOB-EKOK örnekleri (3 soru) birlikte çözün</li>
+            <li><strong>Grafik soruları için 2 örnek</strong> eksen ne, eğim ne diye sorarak okutun</li>
+            <li><strong>Deneme sonrası 10 dk</strong> boş ve yanlış soruları neden diye konuşun</li>
+            <li><strong>Mini zamanlı set</strong> 20 soru / 25 dakika — son 3 dk sadece kontrol</li>
+            <li><strong>Olumlu geri bildirim</strong> 34 doğruyu özellikle vurgulayın</li></ol>
+        </div>
+        <div class="grid grid-cols-1 gap-4">
+          <div class="veli-card veli-do">
+            <h3 class="font-bold text-green-800 mb-2"><i class="fas fa-circle-check mr-1"></i> Yapmanız iyi olur</h3>
+            <ul class="text-sm text-gray-700 space-y-1.5 list-disc pl-5">              <li>İşlem yazma alışkanlığını destekleyin</li>
+              <li>Yanlışları birlikte inceleyin, çocuğun anlatmasını bekleyin</li>
+              <li>Kısa ve düzenli çalışma blokları planlayın</li>
+              <li>Uyku ve beslenme düzenine dikkat edin</li></ul>
+          </div>
+          <div class="veli-card veli-dont">
+            <h3 class="font-bold text-red-800 mb-2"><i class="fas fa-circle-xmark mr-1"></i> Lütfen yapmayın</h3>
+            <ul class="text-sm text-gray-700 space-y-1.5 list-disc pl-5">              <li>Sadece 6 yanlışa odaklanıp 34 doğruyu görmezden gelmek</li>
+              <li>Bu kadar basit soruyu nasıl yapamazsın demek</li>
+              <li>Uzun, yorucu çalışma maratonları</li>
+              <li>Cevap anahtarına hemen bakıp tartışmayı kesmek</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="veli-card mb-6 overflow-x-auto">
+        <h3 class="font-bold text-gray-800 mb-3"><i class="fas fa-table-list text-teal-600 mr-1"></i> Deneme deneme kısa tablo</h3>
+        <table class="w-full text-sm border-collapse">
+          <thead><tr class="bg-teal-50 text-left">
+            <th class="py-2 px-3 border border-teal-100 font-semibold">Deneme</th>
+            <th class="py-2 px-3 border border-teal-100 font-semibold">Sonuç</th>
+            <th class="py-2 px-3 border border-teal-100 font-semibold">Sizin için anlamı</th>
+          </tr></thead>
+          <tbody class="text-gray-700">            <tr><td class="py-2 px-3 border border-gray-100">Deneme Sınavı - 01 · TYT Mat</td><td class="py-2 px-3 border border-gray-100">34/40 (%85)</td><td class="py-2 px-3 border border-gray-100">Üniversite matematiğinde güçlü temel; EBOB-EKOK ve 2 boş soru gelişim alanı</td></tr></tbody>
+        </table>
+      </div>
+      <div class="veli-card">
+        <h3 class="font-bold text-teal-900 mb-3"><i class="fas fa-calendar-week mr-1"></i> Bu hafta evde plan (veli desteği)</h3>
+        <ol class="text-sm text-gray-700 space-y-3">          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">1</span><span><strong>Pazartesi</strong> EBOB-EKOK 5 soru + kısa not</span></li>
+          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">2</span><span><strong>Salı</strong> 2 grafik sorusu birlikte okuma</span></li>
+          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">3</span><span><strong>Çarşamba</strong> Olasılık 4 soru</span></li>
+          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">4</span><span><strong>Perşembe</strong> 20 soruluk mini deneme (zamanlı)</span></li>
+          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">5</span><span><strong>Cuma</strong> Yanlışların tekrarı</span></li>
+          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">6</span><span><strong>Cumartesi</strong> Geometri alan-çevre 5 soru</span></li>
+          <li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">7</span><span><strong>Pazar</strong> Dinlenme + hafif tekrar kartları</span></li></ol>
+      </div>
+    </section>
+    <footer class="text-center text-gray-400 text-xs pb-10 pt-4 border-t border-gray-200">
+      <p class="font-medium text-gray-500">TYT Matematik Branş Analiz Raporu</p>
+      <p class="mt-1">TYT Matematik · 7 sayfa · MEB kazanım eşleştirmeli · 9 Temmuz 2026</p>
+    </footer>
+  </main>
+
+</body>
+</html>
